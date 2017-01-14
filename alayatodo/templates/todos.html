@@ -3,6 +3,9 @@
 {% block content %}
 <div class="col-md-4 col-md-offset-4">
     <h1>Todo List:</h1>
+    {%if form_message %}
+        <span style="color:green;">{{ form_message }}</span>
+    {% endif %}
     <table class="table table-striped">
         <th>#</th><th>User</th><th>Description</th><th>Status</th><th></th>
         {% for todo in todos %}
@@ -26,7 +29,9 @@
             <form method="post" action="{{ url_for('todos_POST') }}">
                 <td colspan="3">
                     <input type="textbox" name="description" class="small-6 small-center" placeholder="Description..."><br>
-                    <span style="color:red">{% if form_error %}{{ form_error }}{% endif %}</span>
+                    {% if form_error %}
+                        <span style="color:red">{{ form_error }}</span>
+                    {% endif %}
                 </td>
                 </td>
                 <td><input type="checkbox" name="status" class="small-6 small-center"></td>

@@ -62,9 +62,9 @@ def todo_as_json(id):
         return jsonify({})
 
     todo = {'id': todo[0],
-              'user_id': todo[1],
-              'description': todo[2],
-              'status': todo[3]}
+            'user_id': todo[1],
+            'description': todo[2],
+            'status': todo[3]}
 
     return jsonify(todo)
 
@@ -80,6 +80,7 @@ def todos():
     context = dict()
     context['todos'] = todos
     context['form_error'] = request.args.get('form_error', None)
+    context['form_message'] = request.args.get('form_message', None)
 
     return render_template('todos.html', **context)
 
@@ -117,7 +118,9 @@ def todos_POST():
     )
     g.db.commit()
 
-    return redirect('/todo')
+    form_message = 'Todo is successful added.'
+
+    return redirect(url_for('todos', form_message=form_message))
 
 
 @app.route('/todo/<id>', methods=['POST'])
@@ -126,4 +129,7 @@ def todo_delete(id):
         return redirect('/login')
     g.db.execute("DELETE FROM todos WHERE id ='%s'" % id)
     g.db.commit()
-    return redirect('/todo')
+
+    form_message = 'Todo is successful deleted.'
+
+    return redirect(url_for('todos', form_message=form_message))
