@@ -61,8 +61,10 @@ def todo_as_json(id):
     if not todo:
         return jsonify({})
 
+    todo = {'id': todo[0],
               'user_id': todo[1],
               'description': todo[2],
+              'status': todo[3]}
 
     return jsonify(todo)
 
