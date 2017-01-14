@@ -1,4 +1,4 @@
-from flask import url_for
+from flask import url_for, jsonify
 
 from alayatodo import app
 from flask import (
@@ -52,6 +52,21 @@ def todo(id):
     return render_template('todo.html', todo=todo)
 
 
+@app.route('/todo/<id>/json', methods=['GET'])
+@app.route('/todo/<id>/json/', methods=['GET'])
+def todo_as_json(id):
+    cur = g.db.execute("SELECT * FROM todos WHERE id ='%s'" % id)
+    todo = cur.fetchone()
+
+    if not todo:
+        return jsonify({})
+
+              'user_id': todo[1],
+              'description': todo[2],
+
+    return jsonify(todo)
+
+
 @app.route('/todo', methods=['GET'])
 @app.route('/todo/', methods=['GET'])
 def todos():
@@ -65,6 +80,21 @@ def todos():
     context['form_error'] = request.args.get('form_error', None)
 
     return render_template('todos.html', **context)
+
+
+@app.route('/todo/json', methods=['GET'])
+@app.route('/todo/json/', methods=['GET'])
+def todos_as_json():
+    cur = g.db.execute("SELECT * FROM todos")
+    todos = cur.fetchall()
+
+    todos = [{'id': todo[0],
+              'user_id': todo[1],
+              'description': todo[2],
+              'status': todo[3]}
+             for todo in todos]
+
+    return jsonify(todos)
 
 
 @app.route('/todo', methods=['POST'])
