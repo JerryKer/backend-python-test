@@ -1,3 +1,5 @@
+from flask import url_for
+
 from alayatodo import app
 from flask import (
     g,
@@ -57,7 +59,12 @@ def todos():
         return redirect('/login')
     cur = g.db.execute("SELECT * FROM todos")
     todos = cur.fetchall()
-    return render_template('todos.html', todos=todos)
+
+    context = dict()
+    context['todos'] = todos
+    context['form_error'] = request.args.get('form_error', None)
+
+    return render_template('todos.html', **context)
 
 
 @app.route('/todo', methods=['POST'])
@@ -65,11 +72,18 @@ def todos():
 def todos_POST():
     if not session.get('logged_in'):
         return redirect('/login')
+
+    form_description = request.form.get('description', '').strip()
+
+    if not form_description:
+        return redirect(url_for('todos', form_error='Description is mandatory.'))
+
     g.db.execute(
         "INSERT INTO todos (user_id, description) VALUES ('%s', '%s')"
         % (session['user']['id'], request.form.get('description', ''))
     )
     g.db.commit()
+
     return redirect('/todo')
 
 
