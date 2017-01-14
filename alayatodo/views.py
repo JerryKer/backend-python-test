@@ -74,13 +74,14 @@ def todos_POST():
         return redirect('/login')
 
     form_description = request.form.get('description', '').strip()
+    form_status = 1 if request.form.get('status', None) is not None else 0
 
     if not form_description:
         return redirect(url_for('todos', form_error='Description is mandatory.'))
 
     g.db.execute(
-        "INSERT INTO todos (user_id, description) VALUES ('%s', '%s')"
-        % (session['user']['id'], request.form.get('description', ''))
+        "INSERT INTO todos (user_id, description, status) VALUES ('%s', '%s', '%s')"
+        % (session['user']['id'], request.form.get('description', ''), form_status)
     )
     g.db.commit()
 

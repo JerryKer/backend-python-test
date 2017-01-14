@@ -4,7 +4,7 @@
 <div class="col-md-4 col-md-offset-4">
     <h1>Todo List:</h1>
     <table class="table table-striped">
-        <th>#</th><th>User</th><th>Description</th><th></th>
+        <th>#</th><th>User</th><th>Description</th><th>Status</th><th></th>
         {% for todo in todos %}
             <tr>
                 <td>{{ todo.id }}</td>
@@ -14,6 +14,7 @@
                        {{ todo.description }}
                     </a>
                 </td>
+                <td>{% if todo.status==0 %}Incomplete{% else %}Complete{% endif %}</td>
                 <td>
                     <form method="post" action="{{ url_for('todo_delete', id=todo.id) }}">
                         <button type="submit" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-remove glyphicon-white"></span></button>
@@ -27,6 +28,8 @@
                     <input type="textbox" name="description" class="small-6 small-center" placeholder="Description..."><br>
                     <span style="color:red">{% if form_error %}{{ form_error }}{% endif %}</span>
                 </td>
+                </td>
+                <td><input type="checkbox" name="status" class="small-6 small-center"></td>
                 <td>
                     <button type="submit" class="btn btn-sm btn-primary">Add</button>
                 </td>
