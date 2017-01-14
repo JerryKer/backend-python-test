@@ -1,13 +1,14 @@
-from flask import url_for, jsonify
 
 from alayatodo import app
 from flask import (
-    g,
     redirect,
     render_template,
     request,
-    session
-    )
+    session,
+    jsonify,
+    url_for)
+
+from alayatodo.models import Todo, User
 
 
 @app.route('/')
@@ -27,9 +28,8 @@ def login_POST():
     username = request.form.get('username')
     password = request.form.get('password')
 
-    sql = "SELECT * FROM users WHERE username = '%s' AND password = '%s'";
-    cur = g.db.execute(sql % (username, password))
-    user = cur.fetchone()
+    user = User().get_user(username, password)
+
     if user:
         session['user'] = dict(user)
         session['logged_in'] = True
@@ -47,24 +47,25 @@ def logout():
 
 @app.route('/todo/<id>', methods=['GET'])
 def todo(id):
-    cur = g.db.execute("SELECT * FROM todos WHERE id ='%s'" % id)
-    todo = cur.fetchone()
+    todo = Todo().get_by_id(id)
+    todo = Todo(todo)
+
     return render_template('todo.html', todo=todo)
 
 
 @app.route('/todo/<id>/json', methods=['GET'])
 @app.route('/todo/<id>/json/', methods=['GET'])
 def todo_as_json(id):
-    cur = g.db.execute("SELECT * FROM todos WHERE id ='%s'" % id)
-    todo = cur.fetchone()
+    todo = Todo().get_by_id(id)
+    todo = Todo(todo)
 
     if not todo:
         return jsonify({})
 
-    todo = {'id': todo[0],
-            'user_id': todo[1],
-            'description': todo[2],
-            'status': todo[3]}
+    todo = {'id': todo.id,
+            'user_id': todo.user_id,
+            'description': todo.description,
+            'status': todo.status}
 
     return jsonify(todo)
 
@@ -74,8 +75,8 @@ def todo_as_json(id):
 def todos():
     if not session.get('logged_in'):
         return redirect('/login')
-    cur = g.db.execute("SELECT * FROM todos")
-    todos = cur.fetchall()
+
+    todos = Todo().get_todos_list()
 
     context = dict()
     context['todos'] = todos
@@ -88,13 +89,12 @@ def todos():
 @app.route('/todo/json', methods=['GET'])
 @app.route('/todo/json/', methods=['GET'])
 def todos_as_json():
-    cur = g.db.execute("SELECT * FROM todos")
-    todos = cur.fetchall()
+    todos = Todo().get_todos_list()
 
-    todos = [{'id': todo[0],
-              'user_id': todo[1],
-              'description': todo[2],
-              'status': todo[3]}
+    todos = [{'id': todo.id,
+              'user_id': todo.user_id,
+              'description': todo.description,
+              'status': todo.status}
              for todo in todos]
 
     return jsonify(todos)
@@ -112,13 +112,12 @@ def todos_POST():
     if not form_description:
         return redirect(url_for('todos', form_error='Description is mandatory.'))
 
-    g.db.execute(
-        "INSERT INTO todos (user_id, description, status) VALUES ('%s', '%s', '%s')"
-        % (session['user']['id'], request.form.get('description', ''), form_status)
-    )
-    g.db.commit()
+    status = Todo().add(session['user']['id'], form_description, form_status)
 
     form_message = 'Todo is successful added.'
+    print status
+    if not status:
+        form_message = 'Todo failed to add.'
 
     return redirect(url_for('todos', form_message=form_message))
 
@@ -127,9 +126,12 @@ def todos_POST():
 def todo_delete(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    g.db.execute("DELETE FROM todos WHERE id ='%s'" % id)
-    g.db.commit()
+
+    status = Todo().delete(id)
 
     form_message = 'Todo is successful deleted.'
+
+    if not status:
+        form_message = 'Todo failed to delete.'
 
     return redirect(url_for('todos', form_message=form_message))
