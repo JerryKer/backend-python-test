@@ -111,3 +111,48 @@ class Todo(DbModel):
             return True
         return False
 
+
+class Pagination:
+    total_pages = None
+    limit = None
+    current_page = 1
+
+    dbmodel = None
+
+    def __init__(self, dbmodel, limit, current_page=1):
+        if current_page > 0:
+            self.current_page = current_page
+
+        self.limit = limit
+        self.dbmodel = dbmodel
+        self.total_pages = self.get_total_pages(dbmodel)
+
+    def get_total_pages(self, dbmodel):
+        number_pages = 0
+
+        if not dbmodel:
+            return 0
+
+        if dbmodel:
+            total_pages = len(dbmodel.all())
+
+            if self.limit and total_pages > 0:
+                if total_pages % self.limit > 0:
+                    number_pages += 1
+
+                number_pages += (total_pages / self.limit)
+
+        return number_pages
+
+    def get_current_items(self):
+        if self.total_pages == 1:
+            return self.dbmodel.all()
+
+        if self.current_page > 0:
+            offset = (self.current_page - 1) * self.limit
+            cur = g.db.execute("SELECT * FROM '%s' LIMIT '%s' OFFSET '%s'" % (
+                self.dbmodel.table, self.limit, offset))
+
+            return cur
+
+        return []

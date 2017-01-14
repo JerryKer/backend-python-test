@@ -8,7 +8,7 @@ from flask import (
     jsonify,
     url_for)
 
-from alayatodo.models import Todo, User
+from alayatodo.models import Todo, User, Pagination
 
 
 @app.route('/')
@@ -73,15 +73,23 @@ def todo_as_json(id):
 @app.route('/todo', methods=['GET'])
 @app.route('/todo/', methods=['GET'])
 def todos():
+    limit = 5
+
+    current_page = request.args.get('current_page', 1)
+    current_page = int(current_page) if current_page > 0 else 1
+
     if not session.get('logged_in'):
         return redirect('/login')
 
-    todos = Todo().get_todos_list()
+    pagination = Pagination(Todo(), limit, current_page)
+    todos = pagination.get_current_items()
 
     context = dict()
     context['todos'] = todos
     context['form_error'] = request.args.get('form_error', None)
     context['form_message'] = request.args.get('form_message', None)
+    context['total_pages'] = pagination.total_pages
+    context['current_page'] = current_page
 
     return render_template('todos.html', **context)
 

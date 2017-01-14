@@ -41,5 +41,16 @@
             </form>
         </tr>
     </table>
+    <div>
+        {% set previous = current_page - 1 %}
+        {% if previous >= 1 %}
+            <a href="{{url_for('todos', current_page=previous)}}" class="button">Previous</a>
+        {% endif %}
+        <span>{{current_page}} of {{total_pages}}</span>
+        {% set next = current_page + 1 %}
+        {% if next <= total_pages %}
+            <a href="{{url_for('todos', current_page=next)}}" class="button">Next</a>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
